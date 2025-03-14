@@ -1,109 +1,78 @@
-package com.examly.springapp.model;
+package com.examly.springapp.controller;
 
-import javax.persistence.*;
-import java.util.Date;
+import com.examly.springapp.model.Employee;
+import com.examly.springapp.service.EmployeeService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
-@Entity
-@Table(name = "employees")
+import java.util.List;
+import java.util.Map;
+
+@RestController
+@RequestMapping("/employees")
 public class EmployeeController {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;
+    @Autowired
+    private EmployeeService employeeService;
 
-    private String name;
-    private String address;
-    private String phoneNumber;
-    private String email;
-    private String jobTitle;
-    private String department;
-    private double salary;
-
-    @Temporal(TemporalType.DATE)
-    private Date hireDate;
-
-    public EmployeeController() {}
-
-    public EmployeeController(String name, String address, String phoneNumber, String email, String jobTitle, String department, double salary, Date hireDate) {
-        this.name = name;
-        this.address = address;
-        this.phoneNumber = phoneNumber;
-        this.email = email;
-        this.jobTitle = jobTitle;
-        this.department = department;
-        this.salary = salary;
-        this.hireDate = hireDate;
+    @PostMapping
+    public ResponseEntity<Employee> addEmployee(@RequestBody Employee employee) {
+        try {
+            Employee savedEmployee = employeeService.saveEmployee(employee);
+            return new ResponseEntity<>(savedEmployee, HttpStatus.CREATED);
+        } catch (Exception e) {
+            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
-    public int getId() {
-        return id;
+    @GetMapping
+    public ResponseEntity<List<Employee>> getAllEmployees() {
+        try {
+            List<Employee> employees = employeeService.getAllEmployees();
+            return new ResponseEntity<>(employees, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
-    public void setId(int id) {
-        this.id = id;
+    @GetMapping("/{id}")
+    public ResponseEntity<Employee> getEmployeeById(@PathVariable int id) {
+        Employee employee = employeeService.getEmployeeById(id);
+        return (employee != null) ? new ResponseEntity<>(employee, HttpStatus.OK)
+                                  : new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
-    public String getName() {
-        return name;
+    @GetMapping("/groupBy/{attribute}")
+    public ResponseEntity<Map<String, List<Employee>>> getEmployeesGroupedByAttribute(@PathVariable String attribute) {
+        try {
+            Map<String, List<Employee>> groupedEmployees = employeeService.groupEmployeesByAttribute(attribute);
+            return new ResponseEntity<>(groupedEmployees, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
-    public void setName(String name) {
-        this.name = name;
+    @GetMapping("/findBy/{attribute}")
+    public ResponseEntity<List<Employee>> findEmployeesByAttribute(@PathVariable String attribute,
+                                                                   @RequestParam("value") String value) {
+        try {
+            List<Employee> employees = employeeService.findEmployeesByAttribute(attribute, value);
+            return new ResponseEntity<>(employees, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
-    public String getAddress() {
-        return address;
-    }
-
-    public void setAddress(String address) {
-        this.address = address;
-    }
-
-    public String getPhoneNumber() {
-        return phoneNumber;
-    }
-
-    public void setPhoneNumber(String phoneNumber) {
-        this.phoneNumber = phoneNumber;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public String getJobTitle() {
-        return jobTitle;
-    }
-
-    public void setJobTitle(String jobTitle) {
-        this.jobTitle = jobTitle;
-    }
-
-    public String getDepartment() {
-        return department;
-    }
-
-    public void setDepartment(String department) {
-        this.department = department;
-    }
-
-    public double getSalary() {
-        return salary;
-    }
-
-    public void setSalary(double salary) {
-        this.salary = salary;
-    }
-
-    public Date getHireDate() {
-        return hireDate;
-    }
-
-    public void setHireDate(Date hireDate) {
-        this.hireDate = hireDate;
+    @GetMapping("/salaryRange")
+    public ResponseEntity<List<Employee>> findEmployeesBySalaryRange(@RequestParam double minSalary,
+                                                                     @RequestParam double maxSalary) {
+        try {
+            List<Employee> employees = employeeService.findEmployeesBySalaryRange(minSalary, maxSalary);
+            return new ResponseEntity<>(employees, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 }
